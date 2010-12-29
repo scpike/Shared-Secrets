@@ -81,12 +81,15 @@ function secretRoom(description, numPeople){
 this.description = description;
 this.numPeople=numPeople;
 this.members = [];
-    
+this.clientAssignments = {};
     
     this.answers = function(){
         var tmp = [];
         for (m =0; m < this.members.length;m++){
-            tmp.push(this.members[m].answer);
+            if(this.members[m].answer){
+                tmp.push(this.members[m].answer);
+                }
+                
         }
         return tmp;
     }
@@ -96,18 +99,30 @@ this.members = [];
     }
     
     this.addMember = function(client){
-        this.members.push(new member(client));
+        console.log(client);
+        var m = new member(client);
+        this.clientAssignments[client.sessionId] = m;
+        this.members.push(m);
     }
+    
     this.getMemberArray = function(){
         return this.members;   
     }
     
+    this.getMemberStatus = function(){
+        var tmp = [];
+        for (m = 0 ; m < this.members.length; m++){
+            for (c = 0; c < this.members[m].clients.length; c++){
+                tmp.push({memberid : this.members[m].clients[c].sessionId , answer : this.members[m].answer});
+            }
+        }
+        return tmp;
+        
+    }
+    
     this.getMemberIDs = function(){
         var tmp = [];
-        console.log('getting members' + this.members);
         for (m=0; m < this.members.length;m++){
-            console.log("trying member " + m);
-            console.log(this.members[m].client);
             tmp = tmp.concat(tmp, this.members[m].getSessionIDs());   
         }
         return tmp;
@@ -120,12 +135,28 @@ this.members = [];
            }
            return arcopy;
     }
+
+    
+    this.sendMembersMsg = function(msg){
+        for (m= 0; m < this.members.length; m++){
+            for (c = 0; c < this.members[m].clients.length;c++){
+                console.log("sending message");
+                console.log(c);
+                this.members[m].clients[c].send(msg);
+            }
+        }
+    }
+    
+    this.readyForAnswer = function(){
+        return (this.answers().length >= this.numPeople);
+    }
     
     
 }
 
 function member(client){
-    this.clients = (client);
+    this.clients = [];
+    this.clients.push(client);
     this.answer = null;
     this.equals = function(other){
         var mySort = this.getSessionIDs().sort();
@@ -140,15 +171,29 @@ function member(client){
 
     this.addClient = function(client){
      this.clients.push(client);   
+     this.cleanupClients();
     }
     
     this.getSessionIDs = function(){
         var tmp = [];
         for (c = 0 ; c< this.clients.length; c++){
-         tmp.push(this.clients[c].sessionID);   
+         tmp.push(this.clients[c].sessionId);   
         }
         return tmp;
     }
+    
+    this.cleanupClients = function(){
+     //remove disconnected clients
+        var tmpArray = [];
+        for (c= 0; c < this.clients.length; c++){
+            if (this.clients[c].connected){
+             tmpArray.push(this.clients[c]);   
+            }
+        }
+        this.clients = tmpArray;
+    }
+    
+
     
 }
 
@@ -159,17 +204,21 @@ console.log('Server running at ' + host  + ':' + port);
 
 var socket = io.listen(app);
 var roomAssignments = {};
+var clientAssignments = {};
+
 
 socket.on('connection',  function(client){ 
   console.log("someone connected to socket");
   console.log(client.sessionId);
+  var room;
 
   client.on('message', function(message){ 
-      
+      console.log("got a message");
+      console.log(message);
       if (message.initializeMember){
         console.log("initializing Member for room  " + message.initializeMember);   
         var roomId = message.initializeMember;
-        var room = rooms[roomId];
+        room = rooms[roomId];
         
         var descr = null, numPeople = null, roomMembers=null;
         if (room){
@@ -179,22 +228,43 @@ socket.on('connection',  function(client){
             console.log("found room information" + room)
             descr = room.description;
             numPeople = room.numPeople;
-            roomMembers = room.getMemberIDs();
-            console.log(roomMembers);
             roomAssignments[client.sessionId] = room;
+            roomMembers = room.getMemberStatus();
+
+            console.log(roomMembers);
+            room.sendMembersMsg( {clientRefresh : {members: roomMembers}});
+            
         }
-        var data = {roomInfo : {description : descr , numPeople : numPeople, members: roomMembers}};
+        var data = {roomInfo : {description : descr , numPeople : numPeople}};
         client.send(data);
       }
      else{
-        var room = roomAssignments[client.sessionId];
+        room = roomAssignments[client.sessionId];
         if (message.sendAnswer){
-            room.addAnswer(client.sessionId);
+            console.log("got an answer");
+            m = room.clientAssignments[client.sessionId];
+            m.answer = message.sendAnswer;
+            console.log(room);
+            
+            room.sendMembersMsg({ answerReceived : {client : client.sessionId, answer : message.sendAnswer}});
         }
+     }
+     console.log("checkign if resutls are ready");
+     console.log(room.readyForAnswer());
+     console.log(room.numPeople);
+     console.log(room.answers().length);
+     if (room.readyForAnswer()){
+         var res = {resultsIn : {average : room.averageAnswer()} };
+         room.sendMembersMsg(res);
      }
      
     }); 
-  client.on('disconnect', function(){ }) ;
+  client.on('disconnect', function(){ 
+        var room = roomAssignments[client.sessionId];
+        room.clientAssignments[client.sessionId].cleanupClients();
+        room.sendMembersMsg( {clientRefresh : {members: room.getMemberStatus()}});
+        
+      }) ;
 }); 
 
 

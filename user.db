@@ -2,3 +2,10 @@
 {"key":1,"val":{"description":"ad","numPeople":"2","members":[]}}
 {"key":2,"val":{"description":"1","numPeople":"1","members":[]}}
 {"key":3,"val":{"description":"Some Test","numPeople":"4","members":[]}}
+{"key":4,"val":{"description":"Test 22","numPeople":"2","members":[],"clientAssignments":{}}}
+{"key":5,"val":{"description":"","numPeople":"","members":[],"clientAssignments":{}}}
+{"key":6,"val":{"description":"Bonuses","numPeople":"5","members":[],"clientAssignments":{}}}
+{"key":7,"val":{"description":"Bonus ","numPeople":"3","members":[],"clientAssignments":{}}}
+{"key":8,"val":{"description":"Test Scores","numPeople":"3","members":[],"clientAssignments":{}}}
+{"key":9,"val":{"description":"Test Scores","numPeople":"5","members":[],"clientAssignments":{}}}
+{"key":10,"val":{"description":"Bonus Numbers","numPeople":"5","members":[],"clientAssignments":{}}}
