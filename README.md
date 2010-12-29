@@ -1,7 +1,7 @@
 Shared Secrets
 ===============
 
-This is a simple node.js application written. It creates anonymous rooms in which
+This is a simple node.js application I'm using to learn. It creates anonymous rooms in which
 people can enter numbers and see their averages. 
 
 Installation
@@ -14,7 +14,7 @@ Installation
 2. Clone the repo.
 
 3. Configure host and server at the top of secret_server.js
-Defaults are 192.168.0.134 and port 8124, so change
+Defaults are 192.168.0.134 and port 8124, so change them, really.
 
 4. Run with node:
     
