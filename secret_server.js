@@ -245,8 +245,8 @@ socket.on('connection',  function(client){
             m = room.clientAssignments[client.sessionId];
             m.answer = message.sendAnswer;
             console.log(room);
-            
-            room.sendMembersMsg({ answerReceived : {client : client.sessionId, answer : message.sendAnswer}});
+        
+            room.sendMembersMsg({ answerReceived : {client : client.sessionId, answer : true}});
         }
      }
      console.log("checkign if resutls are ready");

@@ -26,9 +26,9 @@ function updateMember(member,  answer){
     if (answer){
         $(mid).removeClass("unanswered");
         $(mid).addClass("answered");
-        var sp = document.createElement("span");
-        sp.innerHTML=answer;
-        $(mid).append(sp);
+        //var sp = document.createElement("span");
+        //sp.innerHTML=answer;
+        //$(mid).append(sp);
     }
     else{
      $(mid).removeClass("answered");
