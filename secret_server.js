@@ -10,6 +10,7 @@ var io = require('socket.io'); // socket.io
 
 var host="192.168.0.134";
 var port = "8124";
+
 var express = require('express');
 app = express.createServer();
 
@@ -19,12 +20,18 @@ app.use(express.session());
 
 
 app.get("/secret/:id",function(req,res){
+    var id = req.params.id;
+    if ( rooms[id]){
     console.log(req.params.id);
     fs.readFile(__dirname + "/secret.html", function(err, data){
      res.writeHead(200, {'Content-Type': 'text/html','Set-Cookie': 'roomId='+req.params.id});
      res.write(data, 'utf8');
      res.end();
    }); 
+    }
+    else{
+        send404(res);
+    }
     
 });
 
@@ -249,10 +256,7 @@ socket.on('connection',  function(client){
             room.sendMembersMsg({ answerReceived : {client : client.sessionId, answer : true}});
         }
      }
-     console.log("checkign if resutls are ready");
-     console.log(room.readyForAnswer());
-     console.log(room.numPeople);
-     console.log(room.answers().length);
+ 
      if (room.readyForAnswer()){
          var res = {resultsIn : {average : room.averageAnswer()} };
          room.sendMembersMsg(res);
